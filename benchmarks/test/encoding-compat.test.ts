@@ -19,15 +19,15 @@ const cases = {
 
 describe("Volt HTTP request/response encoding compatibility", () => {
   const app = new Volt();
-  app.post("/echo/text", async (c) => new Response(await c.request.text(), {
+  app.post("/echo/text", async (c) => new Response(await c.req.text(), {
     headers: { "content-type": "text/plain; charset=utf-8" },
   }));
-  app.post("/echo/json", async (c) => Response.json(await c.request.json()));
-  app.post("/echo/binary", async (c) => new Response(await c.request.arrayBuffer(), {
+  app.post("/echo/json", async (c) => Response.json(await c.req.json()));
+  app.post("/echo/binary", async (c) => new Response(await c.req.arrayBuffer(), {
     headers: { "content-type": "application/octet-stream" },
   }));
   app.get("/response/:value", (c) => Response.json({ value: c.params.value }));
-  app.get("/query", (c) => Response.json({ value: new URL(c.request.url).searchParams.get("value") }));
+  app.get("/query", (c) => Response.json({ value: new URL(c.req.url).searchParams.get("value") }));
 
   for (const [name, value] of Object.entries(cases)) {
     test(`text roundtrip: ${name}`, async () => {
