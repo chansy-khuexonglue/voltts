@@ -1,0 +1,21 @@
+name: Encoding and request-response compatibility
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "benchmarks/test/encoding-compat.test.ts"
+      - ".github/workflows/encoding-compat.yml"
+      - "packages/**"
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.4"
+      - name: Install dependencies
+        run: bun install
+      - name: Run encoding compatibility tests
+        run: bun test benchmarks/test/encoding-compat.test.ts
