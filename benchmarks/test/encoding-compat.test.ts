@@ -19,11 +19,11 @@ const cases = {
 
 describe("Volt HTTP request/response encoding compatibility", () => {
   const app = new Volt();
-  app.post("/echo/text", async (c) => new Response(await c.req.text(), {
+  app.post("/echo/text", async (c) => new Response(c.body, {
     headers: { "content-type": "text/plain; charset=utf-8" },
   }));
-  app.post("/echo/json", async (c) => Response.json(await c.req.json()));
-  app.post("/echo/binary", async (c) => new Response(await c.req.arrayBuffer(), {
+  app.post("/echo/json", async (c) => Response.json(c.body));
+  app.post("/echo/binary", async (c) => new Response(c.body, {
     headers: { "content-type": "application/octet-stream" },
   }));
   app.get("/response/:value", (c) => Response.json({ value: c.params.value }));
