@@ -39,7 +39,7 @@ function response(kind: string, size: number, encoding: string): Response {
     body = brotliCompressSync(data);
     headers["content-encoding"] = "br";
   }
-  return new Response(body, { headers });
+  return new Response(new Uint8Array(body).buffer, { headers });
 }
 function resolve(url: string) {
   const u = new URL(url);
@@ -67,7 +67,7 @@ switch (framework) {
   case "elysia": {
     const app = new Elysia().get("/bench/:kind/:size/:encoding", ({ params }) => response(params.kind, Number(params.size), params.encoding));
     app.listen(port);
-    stop = () => app.stop();
+    stop = async () => { await app.stop(); };
     break;
   }
   case "hono": {
