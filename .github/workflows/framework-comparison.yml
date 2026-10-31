@@ -1,0 +1,22 @@
+name: Cross-framework payload and compression comparison
+on:
+  workflow_dispatch:
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.4"
+      - run: bun install
+      - name: Compare frameworks
+        run: bun run benchmarks/comparison/run.ts
+      - name: Upload benchmark reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: framework-comparison
+          path: benchmarks/reports/comparison.*
+          if-no-files-found: warn
