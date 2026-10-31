@@ -34,6 +34,17 @@ function splitSegments(path: string): string[] {
   return segments;
 }
 
+// Decode percent-encoded route parameters without changing the path used for matching.
+// Malformed percent escapes remain unchanged rather than crashing the router.
+function decodeRouteParam(value: string): string {
+  if (!value.includes('%')) return value;
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export class TrieRouter<T = unknown> {
   private root = new TrieNode<T>();
   private staticRoutes = new Map<string, { handler: T; pattern: string; method: string }>();
@@ -97,7 +108,7 @@ export class TrieRouter<T = unknown> {
       ) {
         const prefix = normalized.slice(0, colonIdx);
         const paramName = normalized.slice(colonIdx + 1);
-        const createParams = (val: string): Record<string, string> => ({ [paramName]: val });
+        const createParams = (val: string): Record<string, string> => ({ [paramName]: decodeRouteParam(val) });
         if (m === 'GET' || m === 'ALL') {
           this.fastGetParamRoutes.push({
             prefix,
@@ -211,7 +222,7 @@ export class TrieRouter<T = unknown> {
         if (normalized.length > r.prefixLen && normalized.startsWith(r.prefix) && normalized.indexOf('/', r.prefixLen) === -1) {
           return {
             handler: r.handler,
-            params: { [r.paramName]: normalized.slice(r.prefixLen) },
+            params: { [r.paramName]: decodeRouteParam(normalized.slice(r.prefixLen)) },
             pattern: r.pattern,
             method: 'GET',
           };
@@ -282,7 +293,7 @@ export class TrieRouter<T = unknown> {
 
     // 2. Param child match
     if (node.paramChild) {
-      params[node.paramChild.paramName!] = seg;
+      params[node.paramChild.paramName!] = decodeRouteParam(seg);
       const res = this.matchDynamic(node.paramChild, segments, index + 1, m, params);
       if (res) return res;
       delete params[node.paramChild.paramName!];
@@ -291,7 +302,7 @@ export class TrieRouter<T = unknown> {
     // 3. Wildcard child match
     if (node.wildcardChild) {
       const rest = segments.slice(index).join('/');
-      params[node.wildcardChild.wildcardName] = rest;
+      params[node.wildcardChild.wildcardName] = decodeRouteParam(rest);
       if (node.wildcardChild.handlers.has(m) || node.wildcardChild.handlers.has('ALL')) {
         const h = node.wildcardChild.handlers.get(m) ?? node.wildcardChild.handlers.get('ALL');
         return { node: node.wildcardChild, pattern: h!.pattern };
